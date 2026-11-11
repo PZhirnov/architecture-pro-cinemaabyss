@@ -190,6 +190,7 @@ kubectl apply -f src/kubernetes/proxy-service.yaml
 - Node.js (v14 или выше)
 - npm (v6 или выше)
 - Newman (установлен через npm)
+https://www.npmjs.com/package/newman
 
 #### Установка
 1. Перейдите в директорию тестов
@@ -200,6 +201,20 @@ cd tests/postman
 ```bash
 npm install
 ```
+При ошибке запуска сценариев можно открыть PowerShell от имени администратора. Без повышенных прав изменить политику для всех пользователей системы не получится.
+Выполните команду:
+```bash
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned
+```
+В  package.json версию yargs поставить корректную:
+```json
+{
+  "overrides": {
+    "yargs": "17.7.3"
+  }
+}
+```
+
 3. Запуск тестов локально
 ```bash
 npm run test:local

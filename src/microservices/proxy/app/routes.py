@@ -22,15 +22,16 @@ async def proxy_health() -> Response:
 
 def _pick_movies_backend() -> str:
     """Тест - Стратегия Strangler Fig: часть трафика на новый сервис, часть — на монолит."""
-    # if (
-    #     settings.gradual_migration
-    #     and random.uniform(0, 100) < settings.movies_migration_percent
-    # ):
-    #     return settings.movies_service_url
-    # return settings.monolith_url
+    print(settings.movies_migration_percent)
+    if (
+        settings.gradual_migration
+        and random.uniform(0, 100) < settings.movies_migration_percent
+    ):
+        return settings.movies_service_url
+    return settings.monolith_url
 
-    """Трафиком будем управлять из кубера"""
-    return settings.movies_service_url
+    # """Трафиком будем управлять из кубера"""
+    # return settings.movies_service_url
 
 def _resolve_backend(path: str) -> str:
     """Определяет целевой сервис по пути запроса."""

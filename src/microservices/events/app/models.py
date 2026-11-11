@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 
 from pydantic import BaseModel, Field
@@ -17,7 +17,7 @@ class MovieEvent(BaseModel):
 class UserEvent(BaseModel):
     user_id: int
     action: str
-    timestamp: datetime
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     username: str | None = None
     email: str | None = None
 
@@ -27,14 +27,14 @@ class PaymentEvent(BaseModel):
     user_id: int
     amount: float
     status: str
-    timestamp: datetime
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     method_type: str | None = None
 
 
 class Event(BaseModel):
     id: str
     type: str
-    timestamp: datetime
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     payload: dict[str, Any]
 
 

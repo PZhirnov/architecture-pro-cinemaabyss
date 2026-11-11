@@ -101,6 +101,17 @@ GitHub Actions для непрерывной интеграции и разве�
 - API Gateway (Proxy): http://localhost:8000
 - Kafka UI: http://localhost:8090
 
+Для просмотра API-спецификаций используем Swagger.
+Документацию размещаем в отдельной папке spec. 
+
+```bash
+docker run --rm -p 8082:8080 `
+  -v ${PWD}/spec:/tmp/spec `
+  -e SWAGGER_FILE=/tmp/spec/openapi.json `
+  swaggerapi/swagger-editor:v4.14.8
+```
+
+
 3. Останавливаем сервисы:
    ```bash
    docker-compose down -v

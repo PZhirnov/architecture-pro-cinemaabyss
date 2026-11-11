@@ -8,6 +8,10 @@ from app.client import http_client
 from app.config import settings
 from app.routes import router
 
+# Свой /redoc с рабочим CDN
+from fastapi.openapi.docs import get_redoc_html
+from fastapi import Request
+
 # --- Загрузка статической OpenAPI-спецификации ---
 OPENAPI_SPEC_PATH = Path(__file__).parent / "api-specification.yaml"
 _openapi_spec: dict = yaml.safe_load(OPENAPI_SPEC_PATH.read_text(encoding="utf-8"))
@@ -30,7 +34,7 @@ app = FastAPI(
     title="CinemaAbyss API Gateway",
     version="1.0.0",
     docs_url="/docs",          # Swagger UI
-    redoc_url="/redoc",        # ReDoc
+    redoc_url=None,        # ReDoc
     openapi_url="/openapi.json",
     lifespan=lifespan,
 )
@@ -51,6 +55,17 @@ async def openapi_yaml() -> Response:
         content=OPENAPI_SPEC_PATH.read_text(encoding="utf-8"),
         media_type="application/yaml",
     )
+
+
+
+@app.get("/redoc", include_in_schema=False)
+async def redoc_html(request: Request):
+    return get_redoc_html(
+        openapi_url=app.openapi_url,
+        title=app.title + " - ReDoc",
+        redoc_js_url="https://cdn.jsdelivr.net/npm/redoc@2/bundles/redoc.standalone.js",
+    )
+
 
 
 app.include_router(router)

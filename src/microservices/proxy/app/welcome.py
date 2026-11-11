@@ -1,178 +1,25 @@
+from pathlib import Path
 from string import Template
 
-WELCOME_TEMPLATE = Template("""<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CinemaAbyss API Gateway</title>
-  <style>
-    * { box-sizing: border-box; }
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-           max-width: 960px; margin: 40px auto; padding: 0 20px;
-           background: #0f1117; color: #e6e6e6; line-height: 1.6; }
-    h1 { margin: 0 0 4px; }
-    .subtitle { color: #888; margin: 0 0 24px; }
-    .status { display: inline-flex; align-items: center; gap: 10px;
-              padding: 8px 14px; border-radius: 8px; background: #1a1d27;
-              font-size: 14px; margin-bottom: 32px; border: 1px solid #2a2e3a; }
-    .dot { width: 10px; height: 10px; border-radius: 50%; background: #888;
-           transition: background 0.2s; }
-    .dot.ok { background: #22c55e; box-shadow: 0 0 8px #22c55e88; }
-    .dot.fail { background: #ef4444; box-shadow: 0 0 8px #ef444488; }
-    h2 { margin-top: 36px; border-bottom: 1px solid #2a2e3a; padding-bottom: 8px;
-         font-size: 20px; }
-    .links { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-             gap: 12px; margin-top: 16px; }
-    .link-card { display: block; padding: 16px; background: #1a1d27; border-radius: 8px;
-                 text-decoration: none; color: #e6e6e6;
-                 border: 1px solid #2a2e3a; transition: all 0.15s; }
-    .link-card:hover { border-color: #3b82f6; background: #1f2434;
-                       transform: translateY(-1px); }
-    .link-card .path { font-family: ui-monospace, monospace; font-size: 15px;
-                       font-weight: 600; color: #93c5fd; }
-    .link-card .desc { font-size: 12px; color: #888; margin-top: 6px; }
-    table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 14px; }
-    th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid #2a2e3a;
-             vertical-align: top; }
-    th { color: #888; font-weight: 500; font-size: 12px; text-transform: uppercase;
-         letter-spacing: 0.04em; }
-    code { background: #1a1d27; padding: 2px 6px; border-radius: 4px;
-           font-family: ui-monospace, monospace; font-size: 13px; color: #f0f0f0; }
-    .badge { display: inline-block; padding: 2px 8px; border-radius: 4px;
-             font-size: 11px; font-weight: 600; text-transform: uppercase;
-             letter-spacing: 0.04em; white-space: nowrap; }
-    .badge.migration { background: #422006; color: #fbbf24; }
-    .badge.monolith { background: #1e3a5f; color: #93c5fd; }
-    .badge.service { background: #14532d; color: #86efac; }
-    .info { padding: 12px 16px; background: #1a1d27; border-radius: 8px;
-            border-left: 3px solid #3b82f6; margin: 16px 0; font-size: 14px;
-            color: #cfcfcf; }
-    .info code { font-size: 12px; }
-    footer { margin-top: 56px; text-align: center; color: #555; font-size: 12px; }
-    footer a { color: #93c5fd; }
-  </style>
-</head>
-<body>
-  <h1>🎬 CinemaAbyss API Gateway</h1>
-  <p class="subtitle">Strangler Fig proxy for CinemaAbyss microservices</p>
+from app.config import settings
 
-  <div class="status">
-    <span class="dot" id="status-dot"></span>
-    <span id="status-text">Checking health…</span>
-  </div>
+# Резолвим путь относительно файла модуля, а не os.getcwd() —
+# работает и при запуске из IDE, и в Docker (WORKDIR /app), и из любого cwd.
+TEMPLATE_PATH = Path(__file__).parent / "templates" / "welcome.html"
 
-  <h2>📖 Documentation</h2>
-  <div class="links">
-    <a class="link-card" href="/docs">
-      <div class="path">Swagger UI</div>
-      <div class="desc">Interactive docs with “Try it out”</div>
-    </a>
-    <a class="link-card" href="/redoc">
-      <div class="path">ReDoc</div>
-      <div class="desc">Clean, read-only API reference</div>
-    </a>
-    <a class="link-card" href="/openapi.json">
-      <div class="path">OpenAPI JSON</div>
-      <div class="desc">Machine-readable spec</div>
-    </a>
-    <a class="link-card" href="/openapi.yaml">
-      <div class="path">OpenAPI YAML</div>
-      <div class="desc">Source specification</div>
-    </a>
-  </div>
+# Читаем один раз при импорте — файл статичный, нет смысла читать на каждый запрос.
+WELCOME_TEMPLATE = Template(TEMPLATE_PATH.read_text(encoding="utf-8"))
 
-  <h2>🔌 API Resources</h2>
-  <table>
-    <thead>
-      <tr>
-        <th>Resource</th>
-        <th>Methods</th>
-        <th>Backend</th>
-        <th>Description</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td><code>/api/movies</code></td>
-        <td>GET, POST</td>
-        <td><span class="badge migration">$movies_backend</span></td>
-        <td>Movie catalog</td>
-      </tr>
-      <tr>
-        <td><code>/api/users</code></td>
-        <td>GET, POST</td>
-        <td><span class="badge monolith">monolith</span></td>
-        <td>User management</td>
-      </tr>
-      <tr>
-        <td><code>/api/payments</code></td>
-        <td>GET, POST</td>
-        <td><span class="badge monolith">monolith</span></td>
-        <td>Payment records</td>
-      </tr>
-      <tr>
-        <td><code>/api/subscriptions</code></td>
-        <td>GET, POST</td>
-        <td><span class="badge monolith">monolith</span></td>
-        <td>Subscription plans</td>
-      </tr>
-      <tr>
-        <td><code>/api/events/*</code></td>
-        <td>POST</td>
-        <td><span class="badge service">events-service</span></td>
-        <td>Domain events (Kafka)</td>
-      </tr>
-    </tbody>
-  </table>
 
-  <h2>❤️ Service Health</h2>
-  <div class="links">
-    <a class="link-card" href="/health">
-      <div class="path">Gateway</div>
-      <div class="desc">GET /health</div>
-    </a>
-    <a class="link-card" href="/api/movies/health">
-      <div class="path">Movies</div>
-      <div class="desc">GET /api/movies/health</div>
-    </a>
-    <a class="link-card" href="/api/events/health">
-      <div class="path">Events</div>
-      <div class="desc">GET /api/events/health</div>
-    </a>
-  </div>
+def render_welcome() -> str:
+    """Возвращает готовый HTML с подставленными значениями из Settings."""
+    if settings.gradual_migration:
+        movies_backend = f"migration {settings.movies_migration_percent}%"
+    else:
+        movies_backend = "monolith"
 
-  <div class="info">
-    Migration mode: <strong>$gradual_migration</strong>.
-    Requests to <code>/api/movies</code> are split
-    <strong>$migration_percent%</strong> to <code>movies-service</code>
-    and the rest to <code>monolith</code>.
-  </div>
-
-  <footer>
-    CinemaAbyss API Gateway v1.0.0 &middot;
-    <a href="/openapi.yaml">openapi.yaml</a>
-  </footer>
-
-  <script>
-    (function () {
-      var dot = document.getElementById("status-dot");
-      var text = document.getElementById("status-text");
-      fetch("/health", { cache: "no-store" })
-        .then(function (r) {
-          if (!r.ok) throw new Error("HTTP " + r.status);
-          return r.text();
-        })
-        .then(function (body) {
-          dot.classList.add("ok");
-          text.textContent = body.trim() || "healthy";
-        })
-        .catch(function (err) {
-          dot.classList.add("fail");
-          text.textContent = "unreachable: " + err.message;
-        });
-    })();
-  </script>
-</body>
-</html>
-""")
+    return WELCOME_TEMPLATE.substitute(
+        movies_backend=movies_backend,
+        gradual_migration="enabled" if settings.gradual_migration else "disabled",
+        migration_percent=settings.movies_migration_percent,
+    )

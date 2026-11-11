@@ -711,7 +711,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"user_id\": {{userId}},\n    \"username\": \"testuser\",\n    \"action\": \"logged_in\",\n    \"timestamp\": \"2023-01-15T14:30:00Z\"\n}"
+              "raw": "{\n    \"user_id\": {{userId}},\n    \"username\": \"testuser\",\n    \"action\": \"logged_in\",\n    \"timestamp\": \"{{isoNow}}\"\n}"
             }
           },
           "event": [

@@ -107,9 +107,11 @@ http://localhost:8000/docs
 ![alt text]({6639A242-0AA2-4F8F-A292-93889E9CB982}.png)
 ![alt text]({5E4D9CCF-E52B-43BA-88FD-C846CE4A1B19}.png)
 
-Тестирование c newman:
+Тестирование c newman после запуска локально:
+```bash
+npm run test:local
+```
 ![alt text]({EA1C6847-1C8B-4C76-ABAD-39B4CC990A21}.png)
-
 
 
 

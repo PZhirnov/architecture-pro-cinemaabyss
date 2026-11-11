@@ -5,19 +5,39 @@
 import random
 
 from fastapi import APIRouter, HTTPException, Request, Response
+from fastapi.responses import HTMLResponse
 
 from app.client import proxy_request
 from app.config import settings
+from app.welcome import WELCOME_TEMPLATE
 
 router = APIRouter()
 
 PROXY_METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"]
 
 
+
 @router.get("/health", tags=["health"])
 async def proxy_health() -> Response:
     """Health-check самого API Gateway."""
     return Response(content="Proxy is healthy", media_type="text/plain")
+
+
+# Выведем информацию на стартовой странице
+@router.get("/", tags=["main_page"], include_in_schema=False)
+async def welcome_page() -> HTMLResponse:
+    """Human-friendly landing page with links to all resources."""
+    if settings.gradual_migration:
+        movies_backend = f"migration {settings.movies_migration_percent}%"
+    else:
+        movies_backend = "monolith"
+
+    html = WELCOME_TEMPLATE.substitute(
+        movies_backend=movies_backend,
+        gradual_migration="enabled" if settings.gradual_migration else "disabled",
+        migration_percent=settings.movies_migration_percent,
+    )
+    return HTMLResponse(content=html)
 
 
 def _pick_movies_backend() -> str:

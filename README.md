@@ -101,7 +101,7 @@ GitHub Actions для непрерывной интеграции и разве�
 - API Gateway (Proxy): http://localhost:8000
 - Kafka UI: http://localhost:8090
 
-Для просмотра API-спецификаций используем Swagger.
+Для изучения исходной API-спецификаций используем Swagger.
 Документацию размещаем в отдельной папке spec. 
 
 ```bash

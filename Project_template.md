@@ -101,11 +101,11 @@ http://localhost:8000/docs
 
 Скрины для проверки: 
 Топики и сообщения кафки:
-![alt text]({CE27776C-9931-4E7B-84E1-55D6A7F69E65}.png)
+![alt text](screenshots/{CE27776C-9931-4E7B-84E1-55D6A7F69E65}.png)
 Сообщения из топиков: 
-![alt text]({359B4D87-4916-43A0-871D-6942291D0457}.png)
-![alt text]({6639A242-0AA2-4F8F-A292-93889E9CB982}.png)
-![alt text]({5E4D9CCF-E52B-43BA-88FD-C846CE4A1B19}.png)
+![alt text](screenshots/{359B4D87-4916-43A0-871D-6942291D0457}.png)
+![alt text](screenshots/{6639A242-0AA2-4F8F-A292-93889E9CB982}.png)
+![alt text](screenshots/{5E4D9CCF-E52B-43BA-88FD-C846CE4A1B19}.png)
 
 Тестирование c newman после запуска локально:
 ```bash

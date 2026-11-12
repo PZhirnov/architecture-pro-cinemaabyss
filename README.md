@@ -172,6 +172,30 @@ kubectl apply -f src/kubernetes/proxy-service.yaml
 2. Отправьте изменения в основную ветку для запуска пайплайна CI/CD.
 3. Выполните ручное или автоматическое развертывание (Helm) в локальной среде
 
+#### Запуск и проверка
+```bash
+git add .github/workflows/docker-build-push.yml 
+git commit -m "ci: build and push events + proxy images"
+git push origin cinema 
+```
+
+Проверка перед пушем 
+```bash
+# 1. YAML валиден
+python -c "import yaml,sys; yaml.safe_load(open('.github/workflows/docker-build-push.yml'))" && echo OK
+
+# 2. Dockerfile'ы на месте
+ls src/monolith/Dockerfile
+ls src/microservices/movies/Dockerfile
+ls src/microservices/events/Dockerfile
+ls src/microservices/proxy/Dockerfile
+
+# 3. Сборка проходит локально (быстрая проверка, что контексты верны)
+docker build -t test-events ./src/microservices/events
+docker build -t test-proxy  ./src/microservices/proxy
+```
+
+
 ## Тестирование API с Postman
 Проект включает комплексный набор тестов Postman, которые можно запускать из командной строки с помощью Newman. 
 

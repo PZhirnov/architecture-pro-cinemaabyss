@@ -25,7 +25,41 @@ spec:
     spec:
       containers:
       - name: proxy-service
-        ..... тут
+        image: "{{ .Values.proxyService.image.repository }}:{{ .Values.proxyService.image.tag }}"
+        imagePullPolicy: {{ .Values.proxyService.image.pullPolicy }}
+        ports:
+        - name: http
+          containerPort: {{ .Values.proxyService.service.targetPort }}
+          protocol: TCP
+        env:
+        - name: PORT
+          value: {{ .Values.proxyService.env.port | quote }}
+        - name: LOG_LEVEL
+          value: {{ .Values.proxyService.env.logLevel | quote }}
+        - name: MONOLITH_URL
+          value: {{ .Values.proxyService.env.monolithUrl | quote }}
+        - name: MOVIES_SERVICE_URL
+          value: {{ .Values.proxyService.env.moviesServiceUrl | quote }}
+        - name: EVENTS_SERVICE_URL
+          value: {{ .Values.proxyService.env.eventsServiceUrl | quote }}
+        - name: GRADUAL_MIGRATION
+          value: {{ .Values.config.gradualMigration | quote }}
+        - name: MOVIES_MIGRATION_PERCENT
+          value: {{ .Values.config.moviesMigrationPercent | quote }}
+        resources:
+          {{- toYaml .Values.proxyService.resources | nindent 10 }}
+        readinessProbe:
+          httpGet:
+            path: {{ .Values.proxyService.probes.readiness.path }}
+            port: {{ .Values.proxyService.service.targetPort }}
+          initialDelaySeconds: {{ .Values.proxyService.probes.readiness.initialDelaySeconds }}
+          periodSeconds: {{ .Values.proxyService.probes.readiness.periodSeconds }}
+        livenessProbe:
+          httpGet:
+            path: {{ .Values.proxyService.probes.liveness.path }}
+            port: {{ .Values.proxyService.service.targetPort }}
+          initialDelaySeconds: {{ .Values.proxyService.probes.liveness.initialDelaySeconds }}
+          periodSeconds: {{ .Values.proxyService.probes.liveness.periodSeconds }}
 ---
 apiVersion: v1
 kind: Service

@@ -504,8 +504,11 @@ kubectl get all,cm,secret,pvc,ingress -n cinemaabyss
 
 ![alt text](screenshots/{6B4A51F1-8B22-413C-A9D5-022BD96815F1}.png)
 
-Вывод:
+Вывод https://cinemaabyss.example.com/api/movies:
 ![alt text](screenshots/{92094702-4ABC-45CF-8E49-72E9B2227215}.png)
+
++ доп. результат проверки работы очереди и консьюмера:
+![alt text](screenshots/{33C7BA38-BC8C-40BA-BDFF-DB4AFFFC0CAC}.png)
 
 
 # Задание 5

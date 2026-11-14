@@ -373,9 +373,7 @@ OK
   11. Вызовите https://cinemaabyss.example.com/api/movies
   Вы должны увидеть вывод списка фильмов
   Можно поэкспериментировать со значением   MOVIES_MIGRATION_PERCENT в src/kubernetes/configmap.yaml и убедится, что вызовы movies уходят полностью в новый сервис
-  ==== Результат ==
-  ![alt text](screenshots/{FFD54264-B870-41BB-850B-C40F171EEF0A}.png)
-  ============
+
 
   12. Запустите тесты из папки tests/postman
   ```bash
@@ -383,9 +381,22 @@ OK
   ```
   Часть тестов с health-чек упадет, но создание событий отработает.
   Откройте логи event-service и сделайте скриншот обработки событий
+==== Резултат ==== 
+Я исправлял конфигурации тестов и у меня все прошло. 
+![alt text]({C63E3573-FD19-42AB-B1CF-75556BB7C1C8}.png)
 
 #### Шаг 3
 Добавьте сюда скриншота вывода при вызове https://cinemaabyss.example.com/api/movies и  скриншот вывода event-service после вызова тестов.
+  ==== Результат ==
+  Ok
+  ![alt text](screenshots/{FFD54264-B870-41BB-850B-C40F171EEF0A}.png)
+  ============
+Вывод event-service из лога:
+![alt text]({613CD77C-90B2-4A81-B3FF-6D2FB221C21E}.png)
+И из теста: 
+![alt text]({9D308ACA-7271-475E-886E-5D4B7CE2F4BE}.png)
++ лог кафки
+![alt text]({B754CDCD-5EEF-463F-9D58-82179D12915C}.png)
 
 
 ## Задание 4

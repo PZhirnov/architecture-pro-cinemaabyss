@@ -168,12 +168,20 @@ jobs:
 Скрины из репозитория с результатами сборки:
 ![alt text](screenshots/{6774663B-17D5-478E-B093-01889EA26A46}.png)
 ![alt text](screenshots/{1BD5B5D7-C2DF-4B42-9489-298365DF210D}.png)
+![alt text](screenshots/{63F2C0E2-C880-43E5-8A87-FC83981A0EDE}.png)
 
 ### Proxy в Kubernetes
 
 #### Шаг 1
 Для деплоя в kubernetes необходимо залогиниться в docker registry Github'а.
 1. Создайте Personal Access Token (PAT) https://github.com/settings/tokens . Создавайте class с правом read:packages
+ --- Результат: Сделано
+ Для проверки использовалась команда с последующим вводом PAT:
+ ```bash
+ docker login ghcr.io -u <ваш-github-username>
+ ```
+
+
 2. В src/kubernetes/*.yaml (event-service, monolith, movies-service и proxy-service)  отредактируйте путь до ваших образов 
 ```bash
  spec:
@@ -181,10 +189,21 @@ jobs:
       - name: events-service
         image: ghcr.io/ваш логин/имя репозитория/events-service:latest
 ```
+ --- Результат: Сделано
+
 3. Добавьте в секрет src/kubernetes/dockerconfigsecret.yaml в поле
 ```bash
  .dockerconfigjson: значение в base64 файла ~/.docker/config.json
 ```
+====== Решение:
+ Для получения "user:token" в base64
+```bash
+$user  = "pzhirnov"
+$token = "полученный токе из github"
+[Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes("${user}:${token}"))
+```
+"user:token" в base64: cHpoaXJub3Y6Z2hwX3RQaWEwbTFkd3E4SVlDWFVPc3VMb2JFaWhsV3hFRDFLYzNuUw==
+=======
 
 4. Если в ~/.docker/config.json нет значения для аутентификации
 ```json
@@ -203,23 +222,45 @@ jobs:
 ```json 
  "auth": "имя пользователя:токен в base64"
 ```
+===== Решение 
+Добавлены auth
+```json
+{
+	"auths": {
+		"ghcr.io": {
+			"auth": "cHpoaXJub3Y6Z2hwX3RQaWEwbTFkd3E4SVlDWFVPc3VMb2JFaWhsV3hFRDFLYzNuUw=="
+		}
+	},
+	"credsStore": "desktop",
+	"currentContext": "desktop-linux"
+}
+```
+=====
+
 
 Чтобы получить значение в base64 можно выполнить команду
 ```bash
  echo -n ваш_логин:ваш_токен | base64
 ```
-
+OK
 После заполнения config.json, также прогоните содержимое через base64
 
 ```bash
 cat .docker/config.json | base64
 ```
+или 
+```powershell
+[Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes((Get-Content "$env:USERPROFILE\.docker\config.json" -Raw)))
+```
+
+
 
 и полученное значение добавляем в
 
 ```bash
  .dockerconfigjson: значение в base64 файла ~/.docker/config.json
 ```
+ОК
 
 #### Шаг 2
 

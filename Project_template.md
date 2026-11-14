@@ -442,12 +442,16 @@ proxyService:
     type: ClusterIP
 ```
 
+Реализовано - ОК
+
 - Вместо ghcr.io/db-exp/cinemaabysstest/proxy-service напишите свой путь до образа для всех сервисов
 - для imagePullSecret проставьте свое значение (скопируйте из конфигурации kubernetes)
   ```yaml
   imagePullSecrets:
       dockerconfigjson: ewoJImF1dGhzIjogewoJCSJnaGNyLmlvIjogewoJCQkiYXV0aCI6ICJaR0l0Wlhod09tZG9jRjl2UTJocVZIa3dhMWhKVDIxWmFVZHJOV2hRUW10aFVXbFZSbTVaTjJRMFNYUjRZMWM9IgoJCX0KCX0sCgkiY3JlZHNTdG9yZSI6ICJkZXNrdG9wIiwKCSJjdXJyZW50Q29udGV4dCI6ICJkZXNrdG9wLWxpbnV4IiwKCSJwbHVnaW5zIjogewoJCSIteC1jbGktaGludHMiOiB7CgkJCSJlbmFibGVkIjogInRydWUiCgkJfQoJfSwKCSJmZWF0dXJlcyI6IHsKCQkiaG9va3MiOiAidHJ1ZSIKCX0KfQ==
   ```
+
+Реализовано - ОК
 
 2. В папке ./templates/services заполните шаблоны для proxy-service.yaml и events-service.yaml (опирайтесь на свою kubernetes конфигурацию - смысл helm'а сделать шаблоны для быстрого обновления и установки)
 
@@ -460,6 +464,8 @@ template:
       containers:
        Тут ваша конфигурация
 ```
+Реализован расширенный вариант в процессе дебагинга - ОК
+
 
 3. Проверьте установку
 Сначала удалим установку руками
@@ -487,6 +493,19 @@ minikube tunnel
 Потом вызовите 
 https://cinemaabyss.example.com/api/movies
 и приложите скриншот развертывания helm и вывода https://cinemaabyss.example.com/api/movies
+
+---- РЕЗУЛЬТАТЫ -----
+
+Скриншот развертывания helm и состояние подов после:
+```bash
+helm list -n cinemaabyss
+kubectl get all,cm,secret,pvc,ingress -n cinemaabyss
+```
+
+![alt text](screenshots/{6B4A51F1-8B22-413C-A9D5-022BD96815F1}.png)
+
+Вывод:
+![alt text](screenshots/{92094702-4ABC-45CF-8E49-72E9B2227215}.png)
 
 
 # Задание 5

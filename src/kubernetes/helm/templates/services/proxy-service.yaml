@@ -72,5 +72,11 @@ metadata:
     app.kubernetes.io/instance: {{ .Release.Name }}
 spec:
   selector:
-    ... и тут
+    app: proxy-service
+  ports:
+  - name: http
+    port: {{ .Values.proxyService.service.port }}
+    targetPort: {{ .Values.proxyService.service.targetPort }}
+    protocol: TCP
+  type: {{ .Values.proxyService.service.type }}
 {{- end }}

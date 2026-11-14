@@ -5,7 +5,8 @@ global:
 
 # Image pull secrets
 imagePullSecrets:
-  dockerconfigjson: ewoJImF1dGhzIjogewoJCSJnaGNyLmlvIjogewoJCQkiYXV0aCI6
+  existingSecret: dockerconfigjson  # используем существующий
+  dockerconfigjson: "" # Secret - не рендерится
 # Database configuration
 database:
   host: postgres
@@ -33,7 +34,7 @@ database:
 monolith:
   enabled: true
   image:
-    repository: ghcr.io/db-exp/cinemaabysstest/monolith
+    repository: ghcr.io/pzhirnov/architecture-pro-cinemaabyss/monolith
     tag: latest
     pullPolicy: Always
   replicas: 1
@@ -53,7 +54,7 @@ monolith:
 proxyService:
   enabled: true
   image:
-    repository: ghcr.io/db-exp/cinemaabysstest/proxy-service
+    repository: ghcr.io/pzhirnov/architecture-pro-cinemaabyss/proxy-service
     tag: latest
     pullPolicy: Always
   replicas: 1
@@ -68,12 +69,27 @@ proxyService:
     port: 80
     targetPort: 8000
     type: ClusterIP
+  env:
+    port: "8000"
+    logLevel: INFO
+    monolithUrl: http://monolith:8080
+    moviesServiceUrl: http://movies-service:8081
+    eventsServiceUrl: http://events-service:8082
+  probes:
+    readiness:
+      path: /health
+      initialDelaySeconds: 5
+      periodSeconds: 10
+    liveness:
+      path: /health
+      initialDelaySeconds: 20
+      periodSeconds: 20
 
 # Movies service configuration
 moviesService:
   enabled: true
   image:
-    repository: ghcr.io/db-exp/cinemaabysstest/movies-service
+    repository: ghcr.io/pzhirnov/architecture-pro-cinemaabyss/movies-service
     tag: latest
     pullPolicy: Always
   replicas: 1
@@ -93,7 +109,7 @@ moviesService:
 eventsService:
   enabled: true
   image:
-    repository: ghcr.io/db-exp/cinemaabysstest/events-service
+    repository: ghcr.io/pzhirnov/architecture-pro-cinemaabyss/events-service
     tag: latest
     pullPolicy: Always
   replicas: 1
@@ -108,6 +124,18 @@ eventsService:
     port: 8082
     targetPort: 8082
     type: ClusterIP
+  kafka:
+    bootstrapServers: kafka:9092
+    clientId: events-service
+    consumerGroup: events-service
+    autoOffsetReset: earliest
+  topics:
+    movie: movie-events
+    user: user-events
+    payment: payment-events
+  resources:
+    limits: { cpu: 300m, memory: 256Mi }
+    requests: { cpu: 100m, memory: 128Mi }
 
 # Kafka configuration
 kafka:

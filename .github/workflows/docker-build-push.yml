@@ -132,4 +132,4 @@ jobs:
 
   api-tests:
     needs: build-and-push  # ждем зеленой сборки
-    uses: ./.github/workflows/api-test.yml
+    uses: ./.github/workflows/api-tests.yml

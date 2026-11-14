@@ -3,7 +3,7 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
-# Описание моделей сервиса - тест CI/CD
+# Описание моделей сервиса - тест CI 2
 class MovieEvent(BaseModel):
     movie_id: int
     title: str

@@ -364,14 +364,18 @@ admission-* — это Job'ы, они должны быть Completed (не Runn
 
   9. Добавьте в /etc/hosts
   127.0.0.1 cinemaabyss.example.com
-
+OK
   10. Вызовите
   ```bash
   minikube tunnel
   ```
+  OK
   11. Вызовите https://cinemaabyss.example.com/api/movies
   Вы должны увидеть вывод списка фильмов
   Можно поэкспериментировать со значением   MOVIES_MIGRATION_PERCENT в src/kubernetes/configmap.yaml и убедится, что вызовы movies уходят полностью в новый сервис
+  ==== Результат ==
+  ![alt text](screenshots/{FFD54264-B870-41BB-850B-C40F171EEF0A}.png)
+  ============
 
   12. Запустите тесты из папки tests/postman
   ```bash

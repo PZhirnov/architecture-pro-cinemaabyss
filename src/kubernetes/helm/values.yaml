@@ -5,8 +5,10 @@ global:
 
 # Image pull secrets
 imagePullSecrets:
-  existingSecret: dockerconfigjson  # используем существующий
-  dockerconfigjson: "" # Secret - не рендерится
+  dockerconfigjson: "ewoJImF1dGhzIjogewoJCSJnaGNyLmlvIjogewoJCQkiYXV0aCI6ICJjSHBvYVhKdWIzWTZaMmh3WDNSUWFXRXdiVEZrZDNFNFNWbERXRlZQYzNWTWIySkZhV2hzVjNoRlJERkxZek51VXc9PSIKCQl9Cgl9LAoJImNyZWRzU3RvcmUiOiAiZGVza3RvcCIsCgkiY3VycmVudENvbnRleHQiOiAiZGVza3RvcC1saW51eCIKfQ=="
+  existingSecret: ""
+  # existingSecret: dockerconfigjson  # используем существующий
+  # dockerconfigjson: "" # Secret - не рендерится
 # Database configuration
 database:
   host: postgres

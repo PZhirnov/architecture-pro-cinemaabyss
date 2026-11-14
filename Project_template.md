@@ -343,6 +343,11 @@ cat .docker/config.json | base64
 
   zookeeper-0                       1/1     Running 
 
+=== РЕЗУЛЬТАТ: =====
+
+![alt text](screenshots/{133D4EFE-3904-43D5-9C0C-F8C85928AF20}.png)
+
+=================
   8. Добавим ingress
 
   - добавьте аддон
@@ -352,6 +357,11 @@ cat .docker/config.json | base64
   ```bash
   kubectl apply -f src/kubernetes/ingress.yaml
   ```
+==== РЕЗУЛЬТАТ ===== 
+admission-* — это Job'ы, они должны быть Completed (не Running). controller — Running.
+![alt text](screenshots/image.png)
+=================
+
   9. Добавьте в /etc/hosts
   127.0.0.1 cinemaabyss.example.com
 

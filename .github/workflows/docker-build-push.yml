@@ -84,7 +84,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-    # ---------- Сервис Events ----------    
+      # ---------- Сервис Events ----------    
       - name: Extract metadata (tags, labels) for Events Service
         id: meta-events
         uses: docker/metadata-action@v4
@@ -129,3 +129,7 @@ jobs:
           labels: ${{ steps.meta-proxy.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  api-tests:
+    needs: build-and-push  # ждем зеленой сборки
+    uses: ./.github/workflows/api-test.yml

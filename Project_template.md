@@ -195,15 +195,16 @@ jobs:
 ```bash
  .dockerconfigjson: значение в base64 файла ~/.docker/config.json
 ```
-====== Решение:
+---- Решение:
  Для получения "user:token" в base64
 ```bash
 $user  = "pzhirnov"
 $token = "полученный токе из github"
 [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes("${user}:${token}"))
 ```
-"user:token" в base64: cHpoaXJub3Y6Z2hwX3RQaWEwbTFkd3E4SVlDWFVPc3VMb2JFaWhsV3hFRDFLYzNuUw==
-=======
+"user:token" в base64: cHpoaXJub3Y6Z2hwX3RQ..........
+----
+
 
 4. Если в ~/.docker/config.json нет значения для аутентификации
 ```json
@@ -223,7 +224,8 @@ $token = "полученный токе из github"
  "auth": "имя пользователя:токен в base64"
 ```
 ===== Решение 
-Добавлены auth
+
+Добавлен "auth":
 ```json
 {
 	"auths": {
@@ -243,12 +245,13 @@ $token = "полученный токе из github"
  echo -n ваш_логин:ваш_токен | base64
 ```
 OK
+
 После заполнения config.json, также прогоните содержимое через base64
 
 ```bash
 cat .docker/config.json | base64
 ```
-или 
+или в powershell
 ```powershell
 [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes((Get-Content "$env:USERPROFILE\.docker\config.json" -Raw)))
 ```
@@ -260,7 +263,7 @@ cat .docker/config.json | base64
 ```bash
  .dockerconfigjson: значение в base64 файла ~/.docker/config.json
 ```
-ОК
+Результат: ОК
 
 #### Шаг 2
 
@@ -357,19 +360,24 @@ cat .docker/config.json | base64
   ```bash
   kubectl apply -f src/kubernetes/ingress.yaml
   ```
-==== РЕЗУЛЬТАТ ===== 
-admission-* — это Job'ы, они должны быть Completed (не Running). controller — Running.
+----- РЕЗУЛЬТАТ-------
+
+Скрин:
+!!! admission — это Job'ы, они должны быть Completed (не Running). controller — Running.
+
 ![alt text](screenshots/image.png)
-=================
+
 
   9. Добавьте в /etc/hosts
   127.0.0.1 cinemaabyss.example.com
 OK
+
   10. Вызовите
   ```bash
   minikube tunnel
   ```
   OK
+
   11. Вызовите https://cinemaabyss.example.com/api/movies
   Вы должны увидеть вывод списка фильмов
   Можно поэкспериментировать со значением   MOVIES_MIGRATION_PERCENT в src/kubernetes/configmap.yaml и убедится, что вызовы movies уходят полностью в новый сервис
@@ -381,22 +389,29 @@ OK
   ```
   Часть тестов с health-чек упадет, но создание событий отработает.
   Откройте логи event-service и сделайте скриншот обработки событий
-==== Резултат ==== 
+
+==== Резултат ====
+
 Я исправлял конфигурации тестов и у меня все прошло. 
-![alt text]({C63E3573-FD19-42AB-B1CF-75556BB7C1C8}.png)
+![alt text](screenshots/{C63E3573-FD19-42AB-B1CF-75556BB7C1C8}.png)
+
+
 
 #### Шаг 3
+
 Добавьте сюда скриншота вывода при вызове https://cinemaabyss.example.com/api/movies и  скриншот вывода event-service после вызова тестов.
-  ==== Результат ==
-  Ok
+ 
+ #### ------- Результаты по итогам 3 задания -------
+ 
+ Ok
   ![alt text](screenshots/{FFD54264-B870-41BB-850B-C40F171EEF0A}.png)
-  ============
+  
 Вывод event-service из лога:
-![alt text]({613CD77C-90B2-4A81-B3FF-6D2FB221C21E}.png)
+![alt text](screenshots/{613CD77C-90B2-4A81-B3FF-6D2FB221C21E}.png)
 И из теста: 
-![alt text]({9D308ACA-7271-475E-886E-5D4B7CE2F4BE}.png)
+![alt text](screenshots/{9D308ACA-7271-475E-886E-5D4B7CE2F4BE}.png)
 + лог кафки
-![alt text]({B754CDCD-5EEF-463F-9D58-82179D12915C}.png)
+![alt text](screenshots/{B754CDCD-5EEF-463F-9D58-82179D12915C}.png)
 
 
 ## Задание 4

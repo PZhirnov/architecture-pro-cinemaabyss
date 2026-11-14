@@ -3,7 +3,7 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
-
+# Описание моделей сервиса
 class MovieEvent(BaseModel):
     movie_id: int
     title: str

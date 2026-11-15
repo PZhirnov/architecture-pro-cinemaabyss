@@ -455,3 +455,4 @@ kubectl describe pod -n cinemaabyss -l app=events-service | Select-Object -Last 
 kubectl delete pod -n cinemaabyss -l app=events-service
 kubectl get pods -n cinemaabyss -l app=events-service -w
 ```
+пше 

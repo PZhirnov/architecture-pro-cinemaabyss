@@ -1,3 +1,10 @@
+####  РЕШЕНИЕ НА БАЗЕ PROJECT_TEMPLATE НАХОДИТСЯ В ФАЙЛЕ 
+[Решение_Pavel_Zhirnov.md](Решение_Pavel_Zhirnov.md)
+
+
+---
+
+Исх. README постановки:
 # Архитектура микросервисов CinemaAbyss
 
 ## Обзор.
@@ -101,6 +108,17 @@ GitHub Actions для непрерывной интеграции и разве�
 - API Gateway (Proxy): http://localhost:8000
 - Kafka UI: http://localhost:8090
 
+Для изучения исходной API-спецификаций используем Swagger.
+Документацию размещаем в отдельной папке spec. 
+
+```bash
+docker run --rm -p 8082:8080 `
+  -v ${PWD}/spec:/tmp/spec `
+  -e SWAGGER_FILE=/tmp/spec/openapi.json `
+  swaggerapi/swagger-editor:v4.14.8
+```
+
+
 3. Останавливаем сервисы:
    ```bash
    docker-compose down -v
@@ -161,6 +179,30 @@ kubectl apply -f src/kubernetes/proxy-service.yaml
 2. Отправьте изменения в основную ветку для запуска пайплайна CI/CD.
 3. Выполните ручное или автоматическое развертывание (Helm) в локальной среде
 
+#### Запуск и проверка
+```bash
+git add .github/workflows/docker-build-push.yml 
+git commit -m "ci: build and push events + proxy images"
+git push origin cinema 
+```
+
+Проверка перед пушем 
+```bash
+# 1. YAML валиден
+python -c "import yaml,sys; yaml.safe_load(open('.github/workflows/docker-build-push.yml'))" && echo OK
+
+# 2. Dockerfile'ы на месте
+ls src/monolith/Dockerfile
+ls src/microservices/movies/Dockerfile
+ls src/microservices/events/Dockerfile
+ls src/microservices/proxy/Dockerfile
+
+# 3. Сборка проходит локально (быстрая проверка, что контексты верны)
+docker build -t test-events ./src/microservices/events
+docker build -t test-proxy  ./src/microservices/proxy
+```
+
+
 ## Тестирование API с Postman
 Проект включает комплексный набор тестов Postman, которые можно запускать из командной строки с помощью Newman. 
 
@@ -179,6 +221,7 @@ kubectl apply -f src/kubernetes/proxy-service.yaml
 - Node.js (v14 или выше)
 - npm (v6 или выше)
 - Newman (установлен через npm)
+https://www.npmjs.com/package/newman
 
 #### Установка
 1. Перейдите в директорию тестов
@@ -189,6 +232,20 @@ cd tests/postman
 ```bash
 npm install
 ```
+При ошибке запуска сценариев можно открыть PowerShell от имени администратора. Без повышенных прав изменить политику для всех пользователей системы не получится.
+Выполните команду:
+```bash
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned
+```
+В  package.json версию yargs поставить корректную:
+```json
+{
+  "overrides": {
+    "yargs": "17.7.3"
+  }
+}
+```
+
 3. Запуск тестов локально
 ```bash
 npm run test:local

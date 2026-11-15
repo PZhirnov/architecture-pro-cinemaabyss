@@ -1,16 +1,22 @@
 ## Изучите [README.md](README.md) файл и структуру проекта.
 
-## Задание 1
+# Задание 1
 
 1. Спроектируйте to be архитектуру КиноБездны, разделив всю систему на отдельные домены и организовав интеграционное взаимодействие и единую точку вызова сервисов.
 Результат представьте в виде контейнерной диаграммы в нотации С4.
 Добавьте ссылку на файл в этот шаблон
-[ссылка на файл](ссылка)
+
+### Диаграмма в PlantUml:
+[Ссылка на файл](C4_diagrams\task1_c4_container-diagramm-v2.plantuml)
+
+### Скрин:
+![alt text](С4_task1_img.png)
 
 
-## Задание 2
+# Задание 2
 
-### 1. Proxy
+## 1. Proxy
+### Дано:
 Команда КиноБездны уже выделила сервис метаданных о фильмах movies и вам необходимо реализовать бесшовный переход с применением паттерна Strangler Fig в части реализации прокси-сервиса (API Gateway), с помощью которого можно будет постепенно переключать траффик, используя фиче-флаг.
 
 
@@ -47,7 +53,38 @@
    ```
 - Протестируйте постепенный переход, изменив переменную окружения MOVIES_MIGRATION_PERCENT в файле docker-compose.yml.
 
-### 2. Kafka
+### Решение: 
+Сервис "proxy" (API Gateway)
+
+!! Реализован и добавлена документация.
+
+Особенности архитектуры: Один catch-all роут /api/{full_path:path} + _resolve_backend() — вся маршрутизация в одной функции.
+
+Запускается в составе остальных сервисов с помощью Docker-compose
+```bash
+docker-compose up -d
+```
+##### Сделан интерфейс для стартовой страницы:
+http://localhost:8000/
+
+Доступна документация в Swagger, откуда можно проверить вручную можно весь функционал:
+http://localhost:8000/docs
+
+##### Тестирование по постановке задачи:
+- Проверка c помощью curl:
+```bash
+curl -X 'GET' \
+  'http://localhost:8000/health' \
+  -H 'accept: text/plain'
+```
+ ```bash
+   curl http://localhost:8000/api/movies
+   ```
+- Тестирование через постман прошло успешно
+
+
+## 2. Kafka
+### Дано:
  Вам как архитектуру нужно также проверить гипотезу насколько просто реализовать применение Kafka в данной архитектуре.
 
 Для этого нужно сделать MVP сервис events, который будет при вызове API создавать и сам же читать сообщения в топике Kafka.
@@ -59,8 +96,33 @@
 Необходимые тесты для проверки этого API вызываются при запуске npm run test:local из папки tests/postman 
 Приложите скриншот тестов и скриншот состояния топиков Kafka http://localhost:8090 
 
+### Решение:
+Сервис "Events Service" 
 
-## Задание 3
+Особенности стека: FastAPI + aiokafka	producer + consumer в одном процессе
+
+Запускается в составе остальных сервисов с помощью Docker-compose
+
+Запросы к API можно потестировать вручную через ранее сделанный API-шлюз - см. документацию Swagger по ссылке:
+http://localhost:8000/docs
+
+Скрины для проверки: 
+Топики и сообщения кафки:
+![alt text](screenshots/{CE27776C-9931-4E7B-84E1-55D6A7F69E65}.png)
+Сообщения из топиков: 
+![alt text](screenshots/{359B4D87-4916-43A0-871D-6942291D0457}.png)
+![alt text](screenshots/{6639A242-0AA2-4F8F-A292-93889E9CB982}.png)
+![alt text](screenshots/{5E4D9CCF-E52B-43BA-88FD-C846CE4A1B19}.png)
+
+Тестирование c newman после запуска локально:
+```bash
+npm run test:local
+```
+![alt text]({EA1C6847-1C8B-4C76-ABAD-39B4CC990A21}.png)
+
+
+
+# Задание 3
 
 Команда начала переезд в Kubernetes для лучшего масштабирования и повышения надежности. 
 Вам, как архитектору осталось самое сложное:
@@ -68,8 +130,8 @@
  - реализовать необходимые конфигурационные файлы для переключения трафика.
 
 
-### CI/CD
-
+## CI/CD
+### Дано:
  В папке .github/worflows доработайте деплой новых сервисов proxy и events в docker-build-push.yml , чтобы api-tests при сборке отрабатывали корректно при отправке коммита в вашу новую ветку.
 
 Нужно доработать 
@@ -109,13 +171,24 @@ jobs:
 ```
 Как только сборка отработает и в github registry появятся ваши образы, можно переходить к блоку настройки Kubernetes
 Успешным результатом данного шага является "зеленая" сборка и "зеленые" тесты
+### Решение
+Скрины из репозитория с результатами сборки:
+![alt text](screenshots/{6774663B-17D5-478E-B093-01889EA26A46}.png)
+![alt text](screenshots/{1BD5B5D7-C2DF-4B42-9489-298365DF210D}.png)
+![alt text](screenshots/{63F2C0E2-C880-43E5-8A87-FC83981A0EDE}.png)
 
+## Proxy в Kubernetes
 
-### Proxy в Kubernetes
-
-#### Шаг 1
+### Шаг 1
 Для деплоя в kubernetes необходимо залогиниться в docker registry Github'а.
 1. Создайте Personal Access Token (PAT) https://github.com/settings/tokens . Создавайте class с правом read:packages
+ --- Результат: Сделано
+ Для проверки использовалась команда с последующим вводом PAT:
+ ```bash
+ docker login ghcr.io -u <ваш-github-username>
+ ```
+
+
 2. В src/kubernetes/*.yaml (event-service, monolith, movies-service и proxy-service)  отредактируйте путь до ваших образов 
 ```bash
  spec:
@@ -123,10 +196,20 @@ jobs:
       - name: events-service
         image: ghcr.io/ваш логин/имя репозитория/events-service:latest
 ```
+ - Результат: Сделано
+
 3. Добавьте в секрет src/kubernetes/dockerconfigsecret.yaml в поле
 ```bash
  .dockerconfigjson: значение в base64 файла ~/.docker/config.json
 ```
+#### Решение:
+ Для получения "user:token" в base64
+```powershell
+$user  = "pzhirnov"
+$token = "полученный токе из github"
+[Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes("${user}:${token}"))
+```
+- Результат: Сделано - Мой "user:token" в base64: cHpoaXJub3Y6Z2hwX3RQ..........
 
 4. Если в ~/.docker/config.json нет значения для аутентификации
 ```json
@@ -145,25 +228,45 @@ jobs:
 ```json 
  "auth": "имя пользователя:токен в base64"
 ```
+Решение 
+
+Добавлен "auth":
+```json
+{
+	"auths": {
+		"ghcr.io": {
+			"auth": "cHpoaXJub3Y6Z2hwX3RQaWEwbTFkd3E4SVlDWFVPc3VMb2JFaWhsV3hFRDFLYzNuUw=="
+		}
+	},
+	"credsStore": "desktop",
+	"currentContext": "desktop-linux"
+}
+```
+ - Результат: Сделано
 
 Чтобы получить значение в base64 можно выполнить команду
 ```bash
  echo -n ваш_логин:ваш_токен | base64
 ```
+OK
 
 После заполнения config.json, также прогоните содержимое через base64
 
 ```bash
 cat .docker/config.json | base64
 ```
-
+или в powershell
+```powershell
+[Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes((Get-Content "$env:USERPROFILE\.docker\config.json" -Raw)))
+```
 и полученное значение добавляем в
 
 ```bash
  .dockerconfigjson: значение в base64 файла ~/.docker/config.json
 ```
+- Результат: Сделано
 
-#### Шаг 2
+## Шаг 2
 
   Доработайте src/kubernetes/event-service.yaml и src/kubernetes/proxy-service.yaml
 
@@ -227,7 +330,7 @@ cat .docker/config.json | base64
   ```
 
   Будет наподобие такого
-
+```
   NAME                              READY   STATUS    
 
   events-service-7587c6dfd5-6whzx   1/1     Running  
@@ -243,6 +346,12 @@ cat .docker/config.json | base64
   proxy-service-577d6c549b-6qfcv    1/1     Running  
 
   zookeeper-0                       1/1     Running 
+```
+### РЕЗУЛЬТАТ: 
+
+![alt text](screenshots/{133D4EFE-3904-43D5-9C0C-F8C85928AF20}.png)
+
+
 
   8. Добавим ingress
 
@@ -253,16 +362,27 @@ cat .docker/config.json | base64
   ```bash
   kubectl apply -f src/kubernetes/ingress.yaml
   ```
+### РЕЗУЛЬТАТ
+
+Скрин:
+![alt text](screenshots/image.png)
+!!! admission — это Job'ы, они должны быть Completed (не Running). controller — Running.
+
   9. Добавьте в /etc/hosts
   127.0.0.1 cinemaabyss.example.com
+
+OK
 
   10. Вызовите
   ```bash
   minikube tunnel
   ```
+OK
+
   11. Вызовите https://cinemaabyss.example.com/api/movies
   Вы должны увидеть вывод списка фильмов
   Можно поэкспериментировать со значением   MOVIES_MIGRATION_PERCENT в src/kubernetes/configmap.yaml и убедится, что вызовы movies уходят полностью в новый сервис
+
 
   12. Запустите тесты из папки tests/postman
   ```bash
@@ -271,11 +391,31 @@ cat .docker/config.json | base64
   Часть тестов с health-чек упадет, но создание событий отработает.
   Откройте логи event-service и сделайте скриншот обработки событий
 
-#### Шаг 3
+### Результат
+
+Я исправлял конфигурации тестов и у меня все прошло. 
+![alt text](screenshots/{C63E3573-FD19-42AB-B1CF-75556BB7C1C8}.png)
+
+
+
+### Шаг 3
+
 Добавьте сюда скриншота вывода при вызове https://cinemaabyss.example.com/api/movies и  скриншот вывода event-service после вызова тестов.
+ 
+ ### ------- Результаты по итогам 3 задания -------
+ 
+ Ok
+  ![alt text](screenshots/{FFD54264-B870-41BB-850B-C40F171EEF0A}.png)
+  
+Вывод event-service из лога:
+![alt text](screenshots/{613CD77C-90B2-4A81-B3FF-6D2FB221C21E}.png)
+И из теста: 
+![alt text](screenshots/{9D308ACA-7271-475E-886E-5D4B7CE2F4BE}.png)
++ лог кафки
+![alt text](screenshots/{B754CDCD-5EEF-463F-9D58-82179D12915C}.png)
 
 
-## Задание 4
+# Задание 4
 Для простоты дальнейшего обновления и развертывания вам как архитектуру необходимо так же реализовать helm-чарты для прокси-сервиса и проверить работу 
 
 Для этого:
@@ -303,12 +443,16 @@ proxyService:
     type: ClusterIP
 ```
 
+Реализовано - ОК
+
 - Вместо ghcr.io/db-exp/cinemaabysstest/proxy-service напишите свой путь до образа для всех сервисов
 - для imagePullSecret проставьте свое значение (скопируйте из конфигурации kubernetes)
   ```yaml
   imagePullSecrets:
       dockerconfigjson: ewoJImF1dGhzIjogewoJCSJnaGNyLmlvIjogewoJCQkiYXV0aCI6ICJaR0l0Wlhod09tZG9jRjl2UTJocVZIa3dhMWhKVDIxWmFVZHJOV2hRUW10aFVXbFZSbTVaTjJRMFNYUjRZMWM9IgoJCX0KCX0sCgkiY3JlZHNTdG9yZSI6ICJkZXNrdG9wIiwKCSJjdXJyZW50Q29udGV4dCI6ICJkZXNrdG9wLWxpbnV4IiwKCSJwbHVnaW5zIjogewoJCSIteC1jbGktaGludHMiOiB7CgkJCSJlbmFibGVkIjogInRydWUiCgkJfQoJfSwKCSJmZWF0dXJlcyI6IHsKCQkiaG9va3MiOiAidHJ1ZSIKCX0KfQ==
   ```
+
+Реализовано - ОК
 
 2. В папке ./templates/services заполните шаблоны для proxy-service.yaml и events-service.yaml (опирайтесь на свою kubernetes конфигурацию - смысл helm'а сделать шаблоны для быстрого обновления и установки)
 
@@ -321,6 +465,8 @@ template:
       containers:
        Тут ваша конфигурация
 ```
+Реализован расширенный вариант в процессе дебагинга - ОК
+
 
 3. Проверьте установку
 Сначала удалим установку руками
@@ -349,6 +495,22 @@ minikube tunnel
 https://cinemaabyss.example.com/api/movies
 и приложите скриншот развертывания helm и вывода https://cinemaabyss.example.com/api/movies
 
+### РЕЗУЛЬТАТЫ 4-го задания:
+
+Скриншот развертывания helm и состояние подов после:
+```bash
+helm list -n cinemaabyss
+kubectl get all,cm,secret,pvc,ingress -n cinemaabyss
+```
+
+![alt text](screenshots/{6B4A51F1-8B22-413C-A9D5-022BD96815F1}.png)
+
+Вывод https://cinemaabyss.example.com/api/movies:
+![alt text](screenshots/{92094702-4ABC-45CF-8E49-72E9B2227215}.png)
+
++ доп. результат проверки работы очереди и консьюмера:
+![alt text](screenshots/{33C7BA38-BC8C-40BA-BDFF-DB4AFFFC0CAC}.png)
+
 
 # Задание 5
 Компания планирует активно развиваться и для повышения надежности, безопасности, реализации сетевых паттернов типа Circuit Breaker и канареечного деплоя вам как архитектору необходимо развернуть istio и настроить circuit breaker для monolith и movies сервисов.
@@ -371,13 +533,16 @@ kubectl get namespace -L istio-injection
 kubectl apply -f .\src\kubernetes\circuit-breaker-config.yaml -n cinemaabyss
 
 ```
+### Скрин результата: 
+![alt text](screenshots/image_istio_cbc.png)
 
-Тестирование
+# Тестирование
 
-# fortio
+## fortio
 ```bash
 kubectl apply -f https://raw.githubusercontent.com/istio/istio/release-1.25/samples/httpbin/sample-client/fortio-deploy.yaml -n cinemaabyss
 ```
+- Выполнено, OK
 
 # Get the fortio pod name
 ```bash
@@ -385,6 +550,16 @@ FORTIO_POD=$(kubectl get pod -n cinemaabyss | grep fortio | awk '{print $1}')
 
 kubectl exec -n cinemaabyss $FORTIO_POD -c fortio -- fortio load -c 50 -qps 0 -n 500 -loglevel Warning http://movies-service:8081/api/movies
 ```
+Эквивалент команды в PowerShell:
+```powershell
+$FORTIO_POD = kubectl get pod -n cinemaabyss --no-headers | Select-String "fortio" | ForEach-Object { ($_ -split '\s+')[0] }
+```
+- Выполнено, OK
+
+### Скрин с результатом:
+![alt text](screenshots/{178504B7-034C-42AF-8B49-E80A8D4BF721}.png)
+
+
 Например,
 
 ```bash
@@ -400,20 +575,102 @@ Code 200 : 79 (15.8 %)
 Code 500 : 22 (4.4 %)
 Code 503 : 399 (79.8 %)
 ```
+### Скрин с результатом:
+
+Для моего окружения:
+```bash
+ kubectl exec -n cinemaabyss fortio-deploy-778485f875-bkk87  -c fortio -- fortio load -c 50 -qps 0 -n 500 -loglevel Warning http://movies-service:8081/api/movies
+```
+Скрин:
+![alt text](screenshots/image-fortio-deploy-778485f875-bkk87.png)
+
 Можно еще проверить статистику
 
 ```bash
 kubectl exec -n cinemaabyss fortio-deploy-b6757cbbb-7c9qg -c istio-proxy -- pilot-agent request GET stats | grep movies-service | grep pending
 ```
-
 И там смотрим 
 
 ```bash
 cluster.outbound|8081||movies-service.cinemaabyss.svc.cluster.local;.upstream_rq_pending_total: 311 - столько раз срабатывал circuit breaker
 You can see 21 for the upstream_rq_pending_overflow value which means 21 calls so far have been flagged for circuit breaking.
 ```
+Приложите скриншот работы circuit breaker'а - см. ниже результаты. 
 
-Приложите скриншот работы circuit breaker'а
+### Результат: 
+Для моего окружения выполнено:
+```powershell
+kubectl exec -n cinemaabyss fortio-deploy-778485f875-bkk87 -c istio-proxy -- pilot-agent request GET stats | Select-String "movies-service" | Select-String "pending"
+```
+ Скрин:
+![alt text](screenshots/{circuit-breaker-C5E52091-149C-4236-9C0A-633FD649F47E}.png)
+
+Анализ полученных данных:
+- Circuit breaker настроен и работает — Envoy считает pending-метрики, значит DestinationRule с outlierDetection/connectionPool применён.
+- Нагрузка была, но недостаточная — 58 запросов всего. Для http1MaxPendingRequests: 10 / maxConnections: 100 это мало, чтобы вызвать overflow. Поэтому все overflow/ejection = 0.
+- Pod'ы не выводились из балансировки (ejections_detected = 0) — либо не было 5xx подряд, либо нагрузка слишком маленькая.
+
+#### Пример тестирования с целью явного отображение срабатывания circuit breaker
+1. Усилим нагрузку:
+#### Тест-кейс 1:
+```powershell
+# Больше параллельных соединений, чем maxConnections (100) или http1MaxPendingRequests (10)
+kubectl exec -n cinemaabyss $FORTIO_POD -c fortio -- `
+  fortio load -c 50 -qps 0 -t 30s http://movies-service:8081/api/movies
+```
+-c 50 — 50 одновременных соединений;
+-qps 0 — без ограничения QPS (максимальная нагрузка);
+-t 30s — 30 секунд.
+DestinationRule применён, но circuit breaker всё равно не срабатывает
+
+
+#### Тест-кейс 2. Показываем явно,  circuit breaker сработал
+1) Масштабируем movies-service до 2 реплик (для outlierDetection):
+```powershell
+kubectl scale deploy movies-service -n cinemaabyss --replicas=2
+kubectl get pods -n cinemaabyss -l app=movies-service -w
+# movies-service-xxx   1/1   Running
+# movies-service-yyy   1/1   Running
+```
+2) И делаем нагрузку выше лимита:
+```powershell
+$FORTIO_POD = (kubectl get pod -n cinemaabyss --no-headers | Select-String "fortio" | ForEach-Object { ($_ -split '\s+')[0] })
+
+Write-Host "FORTIO_POD = $FORTIO_POD"
+
+# Нагрузка: 50 соединений при effective limit 40 → должен сработать overflow
+kubectl exec -n cinemaabyss $FORTIO_POD -c fortio -- `
+  fortio load -c 50 -qps 0 -t 20s -allow-initial-errors `
+  http://movies-service:8081/api/movies
+```
+Скрин результата после нагрузки:
+![alt text](screenshots/{0FF3B86A-D717-4BF1-958F-425054FDB669}.png)
+
+Результаты в статистике:
+```powershell
+kubectl exec -n cinemaabyss $FORTIO_POD -c istio-proxy -- pilot-agent request GET stats `
+  | Select-String "movies-service.*(cx_overflow|pending_overflow|outlier|eject|cx_open|rq_pending_open|5xx|pending_total|cx_total)"
+```
+![alt text](image-после-увеличения-нагрузки.png)
+
+Интерпретация: 
+```text
+Нагрузка fortio -c 50 на movies-service вызвала срабатывание двух механизмов circuit breaker:
+
+1. Connection circuit breaker — превышен maxConnections: 5 (эффективно 5 × 8 workers = 40):
+
+upstream_cx_overflow: 586 — 586 соединений отброшено;
+
+circuit_breakers.default.cx_open: 1 — circuit breaker разомкнут.
+
+2. Pending circuit breaker — превышен http1MaxPendingRequests: 1 (эффективно 8):
+
+upstream_rq_pending_overflow: 25784 — 25784 запроса отброшено;
+
+все отброшенные вернулись как 503 (upstream_rq_5xx: 25784, external.upstream_rq_5xx: 25784 — все 5xx сгенерированы локально Envoy'ем).
+```
+### Выполнено
+
 
 Удаляем все
 ```bash

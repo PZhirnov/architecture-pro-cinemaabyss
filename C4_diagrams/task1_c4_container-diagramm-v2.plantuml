@@ -1,0 +1,76 @@
+@startuml CinemaAbyss_C4_Container
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+LAYOUT_WITH_LEGEND()
+title Container diagram — CinemaAbyss
+
+' === Акторы ===
+Person(user, "Пользователь", "Смотрит фильмы, оформляет подписку")
+Person(admin, "Администратор", "Управляет каталогом, смотрит метрики, деплоит")
+Person(dev, "Разработчик", "Пишет код, пушит в git")
+
+' === Клиентская сторона ===
+System_Boundary(client, "Клиентская сторона") {
+    Container(browser, "Browser", "Chrome/Edge/Firefox", "Welcome-страница, Swagger UI, ReDoc")
+    Container(fortio, "fortio", "fortio/fortio", "Нагрузочный тест circuit breaker")
+}
+
+' === GitHub ===
+System_Boundary(gh, "GitHub") {
+    Container(repo, "Repository", "Git", "Код + Helm + Postman")
+    Container(actions, "Actions", "CI/CD", "Build + Newman + push")
+    Container(ghcr, "GHCR", "Registry", "4 образа сервисов")
+}
+
+' === Kubernetes ===
+System_Boundary(k8s, "Kubernetes (minikube)") {
+    Container(ingress, "Nginx Ingress", "Ingress", "cinemaabyss.example.com")
+    Container(istio, "Istio sidecars", "Envoy", "mTLS, circuit breaker")
+
+    Container(proxy, "Proxy Service", "FastAPI :8000", "API Gateway + Strangler Fig")
+    Container(monolith, "Monolith", "Go:8080", "users / payments / subscriptions")
+    Container(movies, "Movies Service", "Go:8081", "Каталог фильмов")
+    Container(events, "Events Service", "FastAPI+aiokafka :8082", "Producer + Consumer")
+
+    Container(kafka, "Kafka", ":9092", "3 топика событий")
+    Container(zk, "Zookeeper", ":2181", "Координация Kafka")
+    ContainerDb(pg, "PostgreSQL", ":5432", "БД монолита")
+}
+
+' === Пользователь → Browser → Ingress ===
+Rel(user, browser, "Открывает страницы")
+Rel(browser, ingress, "HTTP", "cinemaabyss.example.com")
+
+' === Администратор ===
+Rel(admin, browser, "Swagger/ReDoc", "проверка API")
+Rel(admin, ingress, "curl / Postman / fortio", "HTTP :80")
+Rel(admin, ghcr, "Смотрит образы", "HTTPS")
+Rel(admin, k8s, "kubectl / helm", "kubeconfig")
+Rel(admin, actions, "workflow_dispatch")
+
+' === Разработчик + CI/CD ===
+Rel(dev, repo, "git push")
+Rel(repo, actions, "trigger")
+Rel(actions, ghcr, "push images")
+Rel(k8s, ghcr, "imagePull", "HTTPS")
+
+' === Ingress → сервисы ===
+Rel(ingress, proxy, "/", "HTTP :8000")
+Rel(ingress, events, "/api/events", "HTTP :8082")
+
+' === Proxy → backends ===
+Rel(proxy, monolith, "users/payments/subscriptions", "HTTP :8080")
+Rel(proxy, movies, "Strangler Fig 100%", "HTTP :8081")
+Rel(proxy, events, "fallback", "HTTP :8082")
+
+' === Backends → DB/Kafka ===
+Rel(monolith, pg, "SQL", "5432")
+Rel(events, kafka, "produce", "9092")
+Rel(kafka, events, "consume", "9092")
+Rel(kafka, zk, "coordination", "2181")
+
+' === Нагрузка ===
+Rel(fortio, movies, "load -c 50", "HTTP :8081")
+Rel(fortio, events, "load -c 50", "HTTP :8082")
+
+@enduml

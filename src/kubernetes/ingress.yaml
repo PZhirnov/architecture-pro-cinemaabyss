@@ -11,8 +11,16 @@ spec:
     - host: cinemaabyss.example.com
       http:
         paths:
-          #дополните конфигурацию для /
-          ...
+          # 1. Все запросы к корню и остальным API-путям идут через шлюз
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: proxy-service
+                port:
+                  number: 8000
+          # 2. Запросы к событиям уходят напрямую в events-service
+          #    (nginx выберет этот путь, так как он длиннее, чем "/")
           - path: /api/events
             pathType: Prefix
             backend:

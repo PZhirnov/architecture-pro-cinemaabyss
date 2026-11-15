@@ -126,15 +126,14 @@ notepad rendered.yaml
 ```
 
 
-7. Если что-то не работает
+## 7. Если что-то не работает
 
-7. Если что-то не работает
-7.1. cannot reuse a name that is still in use
+### 7.1. cannot reuse a name that is still in use
 Причина: предыдущий helm install упал на середине, релиз cinemaabyss висит в статусе failed или pending-install. Helm не даёт переиспользовать имя.
 
 Фикс:
 
-powershell
+```powershell
 # 1. Удалить зависший релиз
 helm uninstall cinemaabyss -n cinemaabyss
 
@@ -145,12 +144,14 @@ kubectl delete secret -n cinemaabyss -l owner=helm
 # 3. Проверить, что имя свободно
 helm list -n cinemaabyss --all
 # Должен быть пустой список
-7.2. Secret "dockerconfigjson" exists and cannot be imported
+```
+
+### 7.2. Secret "dockerconfigjson" exists and cannot be imported
 Причина: Secret создан вручную через kubectl, у него нет Helm-меток (app.kubernetes.io/managed-by: Helm и аннотаций meta.helm.sh/release-name, meta.helm.sh/release-namespace). Helm не может «захватить» его автоматически.
 
 Фикс — один из трёх:
 
-powershell
+```powershell
 # Вариант A: удалить существующий, Helm создаст из values.yaml
 kubectl delete secret dockerconfigjson -n cinemaabyss
 helm upgrade cinemaabyss ./src/kubernetes/helm -n cinemaabyss
@@ -167,12 +168,13 @@ helm upgrade cinemaabyss ./src/kubernetes/helm -n cinemaabyss
 
 # Вариант C: --take-ownership (Helm 3.17+)
 helm upgrade cinemaabyss ./src/kubernetes/helm -n cinemaabyss --take-ownership
-7.3. field not declared in schema: .spec.containers
+```
+### 7.3. field not declared in schema: .spec.containers
 Причина: в templates/services/events-service.yaml сломан отступ — spec: оказался на уровне корневого spec, а не внутри template:.
 
 Фикс:
 
-powershell
+```powershell
 # 1. Открыть файл
 notepad src/kubernetes/helm/templates/services/events-service.yaml
 Убедиться, что в блоке template: отступы правильные:
@@ -187,17 +189,19 @@ yaml
         - name: dockerconfigjson
       containers:          # 6
       - name: events-service
-powershell
+```
+```powershell
 # 2. Проверить рендер
 helm template cinemaabyss ./src/kubernetes/helm -n cinemaabyss > rendered.yaml
 notepad rendered.yaml
 # В rendered.yaml у events-service должно быть: template: → spec: → containers:
-7.4. ImagePullBackOff
+```
+### 7.4. ImagePullBackOff
 Причина: Secret dockerconfigjson не создан, имя не совпадает с imagePullSecrets в deployment, или токен GHCR истёк.
 
 Диагностика:
 
-powershell
+``` powershell
 # 1. Secret существует?
 kubectl get secret dockerconfigjson -n cinemaabyss
 # NAME                TYPE                             DATA   AGE
@@ -206,9 +210,10 @@ kubectl get secret dockerconfigjson -n cinemaabyss
 # 2. Что в событиях pod'а?
 kubectl describe pod -n cinemaabyss <имя-pod> | Select-Object -Last 30
 # Искать: 401 Unauthorized / denied / manifest unknown
+```
 Фикс:
 
-powershell
+```powershell
 # Перегенерировать base64 из ~/.docker/config.json
 $b64 = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes((Get-Content "$env:USERPROFILE\.docker\config.json" -Raw)))
 
@@ -217,12 +222,13 @@ notepad src/kubernetes/helm/values.yaml
 
 # Обновить релиз
 helm upgrade cinemaabyss ./src/kubernetes/helm -n cinemaabyss
-7.5. Pending у postgres или kafka
+```
+### 7.5. Pending у postgres или kafka
 Причина: нет StorageClass, PVC не может привязаться к хранилищу.
 
 Диагностика:
 
-powershell
+```powershell
 # 1. PVC в каком статусе?
 kubectl get pvc -n cinemaabyss
 # Если STATUS: Pending — идём дальше
@@ -233,25 +239,29 @@ kubectl describe pvc <имя-pvc> -n cinemaabyss | Select-Object -Last 20
 
 # 3. Есть ли StorageClass в кластере?
 kubectl get sc
+```
 Фикс:
 
-powershell
+```powershell
 # Docker Desktop: Settings → Kubernetes → Enable default StorageClass (галочка)
 
 # minikube
 minikube addons enable storage-provisioner
 minikube addons enable default-storageclass
-7.6. CrashLoopBackOff у events-service
+```
+
+### 7.6. CrashLoopBackOff у events-service
 Причина: Kafka ещё не стартовал, а events-service делает retry 15×3с и падает. startupProbe (150с) должен дать время, но если Kafka реально не работает — pod всё равно упадёт.
 
 Диагностика:
 
-powershell
+``` powershell
 # 1. Логи текущего контейнера
 kubectl logs deploy/events-service -n cinemaabyss --tail=50
 
 # 2. Логи предыдущего (упавшего) запуска
 kubectl logs deploy/events-service -n cinemaabyss --previous --tail=50
+```
 Что искать в логах и что делать:
 
 Сообщение	Причина	Фикс
@@ -261,7 +271,7 @@ Name or service not known	DNS-имя kafka не резолвится	kubectl get
 Connection refused	Kafka слушает не на kafka:9092	проверить KAFKA_ADVERTISED_LISTENERS в StatefulSet
 Проверка, что Kafka жива:
 
-powershell
+``` powershell
 kubectl get pods -n cinemaabyss -l "app in (kafka,zookeeper)"
 # kafka-0        1/1  Running
 # zookeeper-0    1/1  Running
@@ -270,12 +280,13 @@ kubectl exec -n cinemaabyss kafka-0 -- kafka-topics.sh --bootstrap-server kafka:
 # movie-events
 # user-events
 # payment-events
-7.7. 404 или 502 через Ingress
+```
+### 7.7. 404 или 502 через Ingress
 Причина: в ConfigMap опечатка в URL бэкенда — например, movies вместо movies-service.
 
 Диагностика:
 
-powershell
+```powershell
 # 1. Что реально в ConfigMap?
 kubectl get configmap cinemaabyss-config -n cinemaabyss -o yaml | Select-String "SERVICE_URL"
 # Должно быть:
@@ -284,9 +295,10 @@ kubectl get configmap cinemaabyss-config -n cinemaabyss -o yaml | Select-String 
 
 # 2. Service'ы с такими именами существуют?
 kubectl get svc -n cinemaabyss
+```
 Фикс:
 
-powershell
+```powershell
 # 1. Исправить в templates/configmap.yaml
 notepad src/kubernetes/helm/templates/configmap.yaml
 Заменить на правильное имя:
@@ -302,7 +314,8 @@ helm upgrade cinemaabyss ./src/kubernetes/helm -n cinemaabyss
 
 # 3. Перезапустить proxy, чтобы он перечитал ConfigMap
 kubectl rollout restart deploy/proxy-service -n cinemaabyss
-7.8. ping cinemaabyss.example.com возвращает timeout
+```
+### 7.8. ping cinemaabyss.example.com возвращает timeout
 Причина: minikube tunnel не запущен, или ADDRESS у Ingress всё ещё 192.168.49.2 (внутренний IP ноды, с хоста недоступен).
 
 Фикс:
@@ -344,7 +357,7 @@ kubectl logs deploy/<имя-сервиса> -n cinemaabyss --tail=50
 kubectl logs deploy/<имя-сервиса> -n cinemaabyss --previous --tail=50
 # Замените <имя-проблемного-pod> и <имя-сервиса> на реальные (proxy-service, events-service, kafka-0 и т.д.).
 ```
-##### Порядок «холодного старта» (пример)
+## Порядок «холодного старта» (базовый шаги)
 ```powershell
 # 1. Подготовка
 minikube status

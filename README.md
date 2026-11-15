@@ -1,3 +1,10 @@
+####  РЕШЕНИЕ НА БАЗЕ PROJECT_TEMPLATE НАХОДИТСЯ В ФАЙЛЕ 
+[Решение_Pavel_Zhirnov.md](Решение_Pavel_Zhirnov.md)
+
+
+---
+
+Исх. README постановки:
 # Архитектура микросервисов CinemaAbyss
 
 ## Обзор.

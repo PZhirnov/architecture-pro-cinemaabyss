@@ -4,18 +4,36 @@ metadata:
   name: events-service-circuit-breaker
   namespace: cinemaabyss
 spec:
-  host: events-service.cinemaabyss.svc.cluster.local
+  host: events-service
   trafficPolicy:
     connectionPool:
       tcp:
-        maxConnections: 100
+        maxConnections: 5
       http:
-        http1MaxPendingRequests: 10
-        http2MaxRequests: 100
-        maxRequestsPerConnection: 10
+        http1MaxPendingRequests: 1
     outlierDetection:
-      consecutive5xxErrors: 5          # 5 ошибок подряд → вывести из балансировки
-      interval: 30s                    # окно подсчёта
-      baseEjectionTime: 30s            # минимальное время «карантина»
-      maxEjectionPercent: 50           # не более 50% pod'ов одновременно
-      
+      consecutive5xxErrors: 3
+      interval: 30s
+      baseEjectionTime: 30s
+      maxEjectionPercent: 100
+
+---
+
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: movies-service-circuit-breaker
+  namespace: cinemaabyss
+spec:
+  host: movies-service
+  trafficPolicy:
+    connectionPool:
+      tcp:
+        maxConnections: 5
+      http:
+        http1MaxPendingRequests: 1
+    outlierDetection:
+      consecutive5xxErrors: 3
+      interval: 30s
+      baseEjectionTime: 30s
+      maxEjectionPercent: 100

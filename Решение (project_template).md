@@ -532,13 +532,16 @@ kubectl get namespace -L istio-injection
 kubectl apply -f .\src\kubernetes\circuit-breaker-config.yaml -n cinemaabyss
 
 ```
+Результат: 
+![alt text](screenshots/image_istio_cbc.png)
 
-Тестирование
+# Тестирование
 
 # fortio
 ```bash
 kubectl apply -f https://raw.githubusercontent.com/istio/istio/release-1.25/samples/httpbin/sample-client/fortio-deploy.yaml -n cinemaabyss
 ```
+- OK
 
 # Get the fortio pod name
 ```bash
@@ -546,6 +549,14 @@ FORTIO_POD=$(kubectl get pod -n cinemaabyss | grep fortio | awk '{print $1}')
 
 kubectl exec -n cinemaabyss $FORTIO_POD -c fortio -- fortio load -c 50 -qps 0 -n 500 -loglevel Warning http://movies-service:8081/api/movies
 ```
+Эквивалент команды в PowerShell:
+```powershell
+$FORTIO_POD = kubectl get pod -n cinemaabyss --no-headers | Select-String "fortio" | ForEach-Object { ($_ -split '\s+')[0] }
+```
+Скрин с результатом:
+![alt text](screenshots/{178504B7-034C-42AF-8B49-E80A8D4BF721}.png)
+
+
 Например,
 
 ```bash
@@ -561,20 +572,74 @@ Code 200 : 79 (15.8 %)
 Code 500 : 22 (4.4 %)
 Code 503 : 399 (79.8 %)
 ```
+Скрин с результатом:
+
+Для моего окружения:
+```bash
+ kubectl exec -n cinemaabyss fortio-deploy-778485f875-bkk87  -c fortio -- fortio load -c 50 -qps 0 -n 500 -loglevel Warning http://movies-service:8081/api/movies
+```
+![alt text](screenshots/image-fortio-deploy-778485f875-bkk87.png)
+
 Можно еще проверить статистику
 
 ```bash
 kubectl exec -n cinemaabyss fortio-deploy-b6757cbbb-7c9qg -c istio-proxy -- pilot-agent request GET stats | grep movies-service | grep pending
 ```
-
 И там смотрим 
 
 ```bash
 cluster.outbound|8081||movies-service.cinemaabyss.svc.cluster.local;.upstream_rq_pending_total: 311 - столько раз срабатывал circuit breaker
 You can see 21 for the upstream_rq_pending_overflow value which means 21 calls so far have been flagged for circuit breaking.
 ```
-
 Приложите скриншот работы circuit breaker'а
+
+Результат: 
+Эквивалент для 
+```powershell
+kubectl exec -n cinemaabyss fortio-deploy-778485f875-bkk87 -c istio-proxy -- pilot-agent request GET stats | Select-String "movies-service" | Select-String "pending"
+```
+### Результаты теста:
+Скрин:
+![alt text](screenshots/{circuit-breaker-C5E52091-149C-4236-9C0A-633FD649F47E}.png)
+
+Анализ полученных данных:
+- Circuit breaker настроен и работает — Envoy считает pending-метрики, значит DestinationRule с outlierDetection/connectionPool применён.
+- Нагрузка была, но недостаточная — 58 запросов всего. Для http1MaxPendingRequests: 10 / maxConnections: 100 это мало, чтобы вызвать overflow. Поэтому все overflow/ejection = 0.
+- Pod'ы не выводились из балансировки (ejections_detected = 0) — либо не было 5xx подряд, либо нагрузка слишком маленькая.
+
+#### Пример тестирования с целью явного отображение срабатывания circuit breaker
+1. Усилим нагрузку:
+Тест-кейс 1:
+```powershell
+# Больше параллельных соединений, чем maxConnections (100) или http1MaxPendingRequests (10)
+kubectl exec -n cinemaabyss $FORTIO_POD -c fortio -- `
+  fortio load -c 50 -qps 0 -t 30s http://movies-service:8081/api/movies
+```
+-c 50 — 50 одновременных соединений;
+-qps 0 — без ограничения QPS (максимальная нагрузка);
+-t 30s — 30 секунд.
+DestinationRule применён, но circuit breaker всё равно не срабатывает
+
+
+Тест-кейс 2:
+Масштабировать movies-service до 2 реплик (для outlierDetection)
+```powershell
+kubectl scale deploy movies-service -n cinemaabyss --replicas=2
+kubectl get pods -n cinemaabyss -l app=movies-service -w
+# movies-service-xxx   1/1   Running
+# movies-service-yyy   1/1   Running
+```
+И делаем нагрузку выше лимита:
+```powershell
+$FORTIO_POD = (kubectl get pod -n cinemaabyss --no-headers | Select-String "fortio" | ForEach-Object { ($_ -split '\s+')[0] })
+
+ # 50 соединений >> effective 40 (5 × 8 workers)
+kubectl exec -n cinemaabyss $FORTIO_POD -c fortio -- `
+  fortio load -c 50 -qps 0 -t 20s -allow-initial-errors http://movies-service:8081/api/movies
+
+```
+
+
 
 Удаляем все
 ```bash
@@ -583,3 +648,4 @@ kubectl delete namespace istio-system
 kubectl delete all --all -n cinemaabyss
 kubectl delete namespace cinemaabyss
 ```
+### Выполнено

@@ -1,10 +1,11 @@
 name: API Tests
 
 on:
+  workflow_call:
   push:
-    branches: [ main, master ]
+    branches: [ main, cinema ]
   pull_request:
-    branches: [ main, master ]
+    branches: [ main, cinema ]
   workflow_dispatch:
     inputs:
       environment:
@@ -27,7 +28,7 @@ jobs:
     
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v7
 
       - name: Set up Docker Compose
         run: |
@@ -41,9 +42,9 @@ jobs:
           sleep 120
       
       - name: Set up Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v7
         with:
-          node-version: '18'
+          node-version: '24'
           cache: 'npm'
           cache-dependency-path: tests/postman/package-lock.json
       
